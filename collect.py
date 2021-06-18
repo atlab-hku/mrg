@@ -1,3 +1,4 @@
+from os import error
 import pathlib
 import requests
 import re
@@ -13,10 +14,26 @@ base_params = {
     "sp": 1
     }
 
+HEADERS = {
+    "User-Agent": "KotSF crawler - Report abuse to admin@kotsf.com"
+}
+
+def get_or_exit(url, params=None, err_msg="error retrieving page"):
+
+    r = requests.get(url, params=params, headers=HEADERS)
+    if r.status_code != 200:
+        with open("download/err.html", "w") as err_page:
+            err_page.write(r.content)
+        print(r.url)
+        sys.exit(err_msg)
+    return r
+
 
 def get_results():
     last_list = int(open("download/last_list.txt").read().strip())
     detail_folder = pathlib.Path("download/detail")
+
+    visited_details = set([d.name for d in detail_folder.iterdir() if d.is_dir()])
     
     for i in range(last_list, 587):
         params = {
@@ -24,12 +41,8 @@ def get_results():
             "sp": i
         }
         
-        r = requests.get(base_url, params=params)
-        print(f"Got list page - {r.url}")
-        if r.status_code != 200:
-            print(r.content)
-            print(r.url)
-            sys.exit("error retrieving list page")
+        r = get_or_exit(base_url, params, "Error retrieving list page.")
+        print(f"Got list page #{i} - {r.url}")
         soup = BeautifulSoup(r.content, features="lxml")
     
         with open(f"download/list/{i}.html", "w") as list_page:
@@ -39,12 +52,11 @@ def get_results():
         for link in links:
             # visit each link, save detail page, save MARC record, save JPG
             id_num = link["href"].split("/")[-2]
-            dr = requests.get(link["href"])
-            print(f"Got detail page {dr.url}")
-            if dr.status_code != 200:
-                print(dr.content)
-                print(dr.url)
-                print("Error retrieving detail page")
+            if id_num in visited_details:
+                print(f"Already visited {id_num} - skipping")
+                continue
+            dr = get_or_exit(link["href"], err_msg="Error retrieving detail page")
+            print(f"Got detail page for {id_num} - {dr.url}")
             ds = BeautifulSoup(dr.content, features="lxml")
 
             # save detail page
@@ -55,13 +67,9 @@ def get_results():
 
             # save MARC record
             marc_url = ds.select("a#item_marc")[0]["href"]
-            mr = requests.get(marc_url)
+            mr = get_or_exit(marc_url, err_msg="Error retriving MARC page")
             ms = BeautifulSoup(mr.content, features="lxml")
             print(f"Got MARC record - {mr.url}")
-            if mr.status_code != 200:
-                print(mr.content)
-                print(mr.url)
-                sys.exit("Error retrieving marc page")
             with open(page_folder / "marc.html", "w") as marc_page:
                 marc_page.write(ms.prettify())
 
@@ -80,13 +88,12 @@ def get_results():
                 jpeg_file.write(jr.content)
             with open("download/last_detail.txt", "w") as detail_count:
                 detail_count.write(f"{i} - {id_num}")
-            time.sleep(2)
+            time.sleep(3)
 
         
         with open(f"download/last_list.txt", "w") as list_count:
             list_count.write(f"{i}")
 
-        time.sleep(2)
 
 
 
