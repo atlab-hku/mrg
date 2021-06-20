@@ -1,6 +1,8 @@
 {
     "python.pythonPath": "/usr/local/src/env/py38/bin/python",
     "cSpell.ignoreWords": [
-        "lxml"
+        "jpgs",
+        "lxml",
+        "missing"
     ]
 }
