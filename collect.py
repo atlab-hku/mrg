@@ -1,4 +1,6 @@
-from os import error
+from collections import defaultdict
+
+import csv
 import pathlib
 import requests
 import random
@@ -20,7 +22,8 @@ HEADERS = {
 }
 
 DETAIL_FOLDER = pathlib.Path("download/detail")
-
+TEST_DETAIL = DETAIL_FOLDER / "2017702213" / "marc.html"
+TEST_SOUP = BeautifulSoup(TEST_DETAIL.read_text(), features="lxml")
 
 def get_or_exit(url, params=None, err_msg="error retrieving page"):
 
@@ -160,15 +163,48 @@ def rename_jpgs(dry_run=False):
 #     }
 # }
 
-def table_to_dict(soup):
+def table_to_list(soup, id_num):
     # extract table from MARC record html and convert to dict
     # headers: Tag, i1, i2, code, text
-    # format = {
-    #     "001": { 
-    #         "i1": "0",
-    #         "i2": "0",
-    #         "code": "a",
-    #         "text": "example"
-    #     }
-    # }
-    pass
+    rows = soup.find_all("tr")
+    res = []
+    current_tag = ""
+    for row in rows:
+        cells = row.find_all("td")
+        if not cells: continue
+        tag = cells[0].text.strip()
+        if tag: current_tag = tag
+        data_row = [
+            id_num,                                # record_id
+            current_tag,                           # tag
+            cells[1].text.strip() or "-",          # i1
+            cells[2].text.strip() or "-",          # i2
+            cells[3].text.strip() or "-",          # code
+            cells[4].text.strip() or "-",          # text
+        ]
+        res.append(data_row)
+    return res
+
+def extract_raw_data():
+    data = []
+    header = ["record_id", "tag", "i1", "i2", "code", "text"]
+    max_lens = [0, 0, 0, 0, 0, 0]
+    for folder in DETAIL_FOLDER.iterdir():
+        if not folder.is_dir(): continue
+        marc = folder / "marc.html"
+        soup = BeautifulSoup(marc.read_text(), features="lxml")
+        records = table_to_list(soup, folder.name)
+        for row in records:
+            max_lens = [max([len(e), max_lens[i]]) for i, e in enumerate(row)]
+        data.extend(records)
+    with open("raw_data.csv", "w") as csv_file:
+        writer = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
+        writer.writerow(header)
+        writer.writerows(data)
+
+    with open("data_lengths.txt", "w") as length_file:
+        for k, v in zip(header, max_lens):
+            length_file.write(f"{k}: {v}")
+
+
+        
