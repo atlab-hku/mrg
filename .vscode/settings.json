@@ -1,6 +1,7 @@
 {
     "python.pythonPath": "/usr/local/src/env/py38/bin/python",
     "cSpell.ignoreWords": [
+        "innogeo",
         "jpgs",
         "lxml",
         "missing"
