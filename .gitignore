@@ -291,3 +291,4 @@ workspace.code-workspace
 *.rdb
 
 download/
+data/
