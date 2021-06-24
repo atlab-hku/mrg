@@ -1,1 +1,6 @@
-record_id: 10tag: 3i1: 1i2: 1code: 1text: 797
+record_id: 10
+tag: 3
+i1: 1
+i2: 1
+code: 1
+text: 797

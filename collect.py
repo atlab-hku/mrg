@@ -151,10 +151,9 @@ def rename_jpgs(dry_run=False):
 # Sample record to generate - index by id number
 # rec = {
 #     2017702119: {
-#         "title": "Premium gas station (formerly Joy gas station), Lakeshore Boulevard & Windemere, Toronto, Ontario, Canada",
+#         "title": "Premium gas station (formerly Joy gas station), Lakeshore Boulevard & Windemere, Toronto, Ontario, Canada", # 245 1 0 a
 #         "year": 1977,  # 260 - - c
-#         # 524 8 - a
-#         "credit": "John Margolies Roadside America photograph archive (1972-2008), Library of Congress, Prints and Photographs Division.",
+#         "credit": "John Margolies Roadside America photograph archive (1972-2008), Library of Congress, Prints and Photographs Division.", # 524 8 - a
 #         "country": "Canada",  # 752 - - a
 #         "state": "Ontario",  # 752 - - b
 #         "city": "Toronto",  # 752 - - c
