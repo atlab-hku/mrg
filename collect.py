@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 import csv
+import json
 import pathlib
 import requests
 import random
@@ -205,5 +206,33 @@ def extract_raw_data():
         for k, v in zip(header, max_lens):
             length_file.write(f"{k}: {v}")
 
+def split_year(year_text):
+    years = [int(y) for y in re.findall(r'(\d{4})', year_text)]
+    if len(years) == 1:
+        return years[0], years[0]
+    else:
+        return min(years), max(years)
 
-        
+def process_line(line):
+    res = line.copy()
+    res['min_year'], res['max_year'] = split_year(line['year'])
+    del res['year']
+    if res['latitude'] == '': 
+        res['latitude'] = None
+    else:
+        res['latitude'] = float(res['latitude'])
+
+    if res['longitude'] == '': 
+        res['longitude'] = None
+    else:
+        res['longitude'] = float(res['longitude'])
+    res['id'] = int(res['id'])
+    return res
+
+def csv_to_json():
+    with open("photos.csv") as csvfile:
+        reader = csv.DictReader(csvfile)
+        lines = [process_line(l) for l in reader]
+    with open("photos.json", "w") as outfile:
+        outfile.write(json.dumps(lines))
+    
